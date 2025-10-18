@@ -265,3 +265,4 @@ lucene
 /BlueBrown.Services.Sportradar/XmlFeeds/Fixtures
 /BlueBrown.Services.Sportradar/Database.db
 /Api/appsettings.Development.json
+/nul
