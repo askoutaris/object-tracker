@@ -38,11 +38,11 @@ var person = new Person
 
 // Create a tracker and configure what to track
 var tracker = Tracker<Person, string>.CreateNew(person)
-    .Track(
+    .TrackProperty(
         selector: p => p.Name,
         differenceFactory: (oldValue, newValue) =>
             $"Name changed from {oldValue} to {newValue}")
-    .Track(
+    .TrackProperty(
         selector: p => p.Age,
         differenceFactory: (oldValue, newValue) =>
             $"Age changed from {oldValue} to {newValue}");
@@ -66,7 +66,7 @@ foreach (var diff in differences)
 ## How It Works
 
 1. **Create a Tracker** - Pass your object to `Tracker<TType, TDiff>.CreateNew()`. This captures a snapshot of its current state.
-2. **Configure Tracking** - Use `.Track()` for properties and `.TrackItems()` for collections.
+2. **Configure Tracking** - Use `.TrackProperty()` for properties and `.TrackCollection()` for collections.
 3. **Make Changes** - Modify your object as needed.
 4. **Compare** - Call `tracker.Compare(object)` to get an array of differences.
 
@@ -78,7 +78,7 @@ Track any property using a selector and a factory function to create differences
 
 ```csharp
 var tracker = Tracker<Person, Difference>.CreateNew(person)
-    .Track(
+    .TrackProperty(
         selector: p => p.Email,
         differenceFactory: (oldEmail, newEmail) =>
             new Difference("Email", oldEmail, newEmail));
@@ -87,7 +87,7 @@ var tracker = Tracker<Person, Difference>.CreateNew(person)
 You can track computed values:
 
 ```csharp
-tracker.Track(
+tracker.TrackProperty(
     selector: p => p.Name.Length,
     differenceFactory: (oldLength, newLength) =>
         new Difference("NameLength", oldLength, newLength));
@@ -108,7 +108,7 @@ var cart = new ShoppingCart
 };
 
 var tracker = Tracker<ShoppingCart, string>.CreateNew(cart)
-    .TrackItems(
+    .TrackCollection(
         itemsSelector: c => c.Items,
         matchingPredicate: (item1, item2) => item1.Id == item2.Id,
         addedFactory: (src, tgt, item) => $"Added: {item.Name}",
@@ -130,7 +130,7 @@ Track properties of collection items using `configureTracker`:
 
 ```csharp
 var tracker = Tracker<ShoppingCart, string>.CreateNew(cart)
-    .TrackItems(
+    .TrackCollection(
         itemsSelector: c => c.Items,
         matchingPredicate: (item1, item2) => item1.Id == item2.Id,
         addedFactory: (src, tgt, item) => $"Added: {item.Name}",
@@ -138,13 +138,13 @@ var tracker = Tracker<ShoppingCart, string>.CreateNew(cart)
         configureTracker: itemTracker =>
         {
             // Track price changes for matched items
-            itemTracker.Track(
+            itemTracker.TrackProperty(
                 selector: p => p.Price,
                 differenceFactory: (oldPrice, newPrice) =>
                     $"Product {itemTracker.Source.Id}: Price changed from {oldPrice:C} to {newPrice:C}");
 
             // Track name changes for matched items
-            itemTracker.Track(
+            itemTracker.TrackProperty(
                 selector: p => p.Name,
                 differenceFactory: (oldName, newName) =>
                     $"Product {itemTracker.Source.Id}: Name changed from '{oldName}' to '{newName}'");
@@ -184,7 +184,7 @@ public class ItemAdded : IDifference
 
 // Use in tracker
 var tracker = Tracker<Person, IDifference>.CreateNew(person)
-    .Track(
+    .TrackProperty(
         selector: p => p.Name,
         differenceFactory: (old, newVal) =>
             new PropertyChanged("Name", old, newVal));
@@ -202,7 +202,7 @@ Creates a new tracker instance and captures a snapshot of the source object.
 
 **Returns:** `ITracker<TType, TDiff>`
 
-#### Track\<TValue>(selector, differenceFactory)
+#### TrackProperty\<TValue>(selector, differenceFactory)
 Tracks a property or computed value.
 
 **Parameters:**
@@ -211,7 +211,7 @@ Tracks a property or computed value.
 
 **Returns:** `Tracker<TType, TDiff>` (for chaining)
 
-#### TrackItems\<TItem>(itemsSelector, matchingPredicate, addedFactory, removedFactory, configureTracker)
+#### TrackCollection\<TItem>(itemsSelector, matchingPredicate, addedFactory, removedFactory, configureTracker)
 Tracks a collection of items.
 
 **Parameters:**

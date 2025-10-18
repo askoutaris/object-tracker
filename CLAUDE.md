@@ -70,11 +70,11 @@ The main tracking class that stores a snapshot of an object and tracks specified
 
 The tracker uses nested classes (defined as partial class members in separate files):
 
-1. **TrackedValue<TValue>** (TrackerValue.cs): Tracks individual property values
+1. **TrackedProperty<TValue>** (TrackerValue.cs): Tracks individual property values
    - Compares source value against target value using `.Equals()`
    - Invokes `differenceFactory` when values differ or when null state changes
 
-2. **TrackCollection<TItem>** (TrackerCollection.cs): Tracks collections of items
+2. **TrackedCollection<TItem>** (TrackerCollection.cs): Tracks collections of items
    - Matches items between source and target collections using a matching predicate
    - Recursively tracks individual items using nested `Tracker<TItem, TDiff>` instances
    - Detects added items (in target but not in source) via `addedFactory`
@@ -83,7 +83,7 @@ The tracker uses nested classes (defined as partial class members in separate fi
 ### Key Design Patterns
 
 - **Partial classes**: The main `Tracker<TType, TDiff>` class is split across three files (Tracker.cs, TrackerValue.cs, TrackerCollection.cs)
-- **Nested types**: Internal tracking implementations (`ITrackedValue`, `TrackedValue<TValue>`, `TrackCollection<TItem>`) are nested within the main tracker class
+- **Nested types**: Internal tracking implementations (`ITrackedItem`, `TrackedProperty<TValue>`, `TrackedCollection<TItem>`) are nested within the main tracker class
 - **Factory pattern**: Difference objects are created via user-provided factory functions, giving full control over the diff representation
 
 ## Code Style
