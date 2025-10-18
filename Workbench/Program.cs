@@ -29,14 +29,14 @@ namespace Workbench
 
 			// Create tracker - this captures the current state as the baseline
 			var tracker = Tracker<Person, IDifference>.CreateNew(person)
-				// Track the Name property
-				.Track(
+				// TrackProperty the Name property
+				.TrackProperty(
 					selector: p => p.Name,
 					differenceFactory: (oldName, newName) =>
 						new PropertyChangeDifference("Name", oldName, newName))
 
-				// Track Name length with custom difference type
-				.Track(
+				// TrackProperty Name length with custom difference type
+				.TrackProperty(
 					selector: p => p.Name,
 					differenceFactory: (oldName, newName) =>
 					{
@@ -45,8 +45,8 @@ namespace Workbench
 						return null!; // Return null to skip this difference if condition not met
 					})
 
-				// Track collection of addresses
-				.TrackItems(
+				// TrackProperty collection of addresses
+				.TrackCollection(
 					itemsSelector: p => p.Addresses,
 					matchingPredicate: (addr1, addr2) => addr1.Id == addr2.Id,
 					addedFactory: (src, tgt, addedAddress) =>
@@ -56,7 +56,7 @@ namespace Workbench
 					configureTracker: addressTracker =>
 					{
 						// For each matched address, track the City property
-						addressTracker.Track(
+						addressTracker.TrackProperty(
 							selector: a => a.City,
 							differenceFactory: (oldCity, newCity) =>
 								new GenericDifference($"Address {addressTracker.Source.Id}: City changed from \"{oldCity}\" to \"{newCity}\""));

@@ -65,7 +65,7 @@ namespace ObjectTracker
 
 					if (matchedItem != null)
 					{
-						// Track matched target items to avoid duplicate processing
+						// TrackProperty matched target items to avoid duplicate processing
 						matchedTargetIndices.Add(matchedIndex);
 						differences.AddRange(tracker.Compare(matchedItem));
 					}

@@ -26,7 +26,7 @@ public class TrackerTests
 		var tracker = Tracker<Person, Difference>.CreateNew(person);
 
 		// Act
-		var result = tracker.Track(p => p.Name, (old, newVal) => new Difference("Name", old, newVal));
+		var result = tracker.TrackProperty(p => p.Name, (old, newVal) => new Difference("Name", old, newVal));
 
 		// Assert
 		Assert.Same(tracker, result);
@@ -38,9 +38,9 @@ public class TrackerTests
 		// Arrange
 		var person = new Person("John", 30, "john@example.com");
 		var tracker = Tracker<Person, Difference>.CreateNew(person)
-			.Track(p => p.Name, (old, newVal) => new Difference("Name", old, newVal))
-			.Track(p => p.Age, (old, newVal) => new Difference("Age", old, newVal))
-			.Track(p => p.Email, (old, newVal) => new Difference("Email", old, newVal));
+			.TrackProperty(p => p.Name, (old, newVal) => new Difference("Name", old, newVal))
+			.TrackProperty(p => p.Age, (old, newVal) => new Difference("Age", old, newVal))
+			.TrackProperty(p => p.Email, (old, newVal) => new Difference("Email", old, newVal));
 
 		// Act
 		var differences = tracker.Compare(person);
@@ -55,8 +55,8 @@ public class TrackerTests
 		// Arrange
 		var original = new Person("John", 30, "john@example.com");
 		var tracker = Tracker<Person, Difference>.CreateNew(original)
-			.Track(p => p.Name, (old, newVal) => new Difference("Name", old, newVal))
-			.Track(p => p.Age, (old, newVal) => new Difference("Age", old, newVal));
+			.TrackProperty(p => p.Name, (old, newVal) => new Difference("Name", old, newVal))
+			.TrackProperty(p => p.Age, (old, newVal) => new Difference("Age", old, newVal));
 
 		var modified = new Person("John", 31, "john@example.com");
 
@@ -76,9 +76,9 @@ public class TrackerTests
 		// Arrange
 		var original = new Person("John", 30, "john@example.com");
 		var tracker = Tracker<Person, Difference>.CreateNew(original)
-			.Track(p => p.Name, (old, newVal) => new Difference("Name", old, newVal))
-			.Track(p => p.Age, (old, newVal) => new Difference("Age", old, newVal))
-			.Track(p => p.Email, (old, newVal) => new Difference("Email", old, newVal));
+			.TrackProperty(p => p.Name, (old, newVal) => new Difference("Name", old, newVal))
+			.TrackProperty(p => p.Age, (old, newVal) => new Difference("Age", old, newVal))
+			.TrackProperty(p => p.Email, (old, newVal) => new Difference("Email", old, newVal));
 
 		var modified = new Person("Jane", 31, "john@example.com");
 
@@ -97,7 +97,7 @@ public class TrackerTests
 		// Arrange
 		var original = new Person("John", 30, null);
 		var tracker = Tracker<Person, Difference>.CreateNew(original)
-			.Track(p => p.Email, (old, newVal) => new Difference("Email", old, newVal));
+			.TrackProperty(p => p.Email, (old, newVal) => new Difference("Email", old, newVal));
 
 		var modified = new Person("John", 30, "john@example.com");
 
@@ -117,7 +117,7 @@ public class TrackerTests
 		// Arrange
 		var original = new Person("John", 30, "john@example.com");
 		var tracker = Tracker<Person, Difference>.CreateNew(original)
-			.Track(p => p.Email, (old, newVal) => new Difference("Email", old, newVal));
+			.TrackProperty(p => p.Email, (old, newVal) => new Difference("Email", old, newVal));
 
 		var modified = new Person("John", 30, null);
 
@@ -137,7 +137,7 @@ public class TrackerTests
 		// Arrange
 		var original = new Person("John", 30, null);
 		var tracker = Tracker<Person, Difference>.CreateNew(original)
-			.Track(p => p.Email, (old, newVal) => new Difference("Email", old, newVal));
+			.TrackProperty(p => p.Email, (old, newVal) => new Difference("Email", old, newVal));
 
 		var modified = new Person("John", 30, null);
 
@@ -170,7 +170,7 @@ public class TrackerTests
 		// Arrange
 		var original = new Person("John", 30, "john@example.com");
 		var tracker = Tracker<Person, Difference>.CreateNew(original)
-			.Track(p => p.Name.Length, (old, newVal) => new Difference("NameLength", old, newVal));
+			.TrackProperty(p => p.Name.Length, (old, newVal) => new Difference("NameLength", old, newVal));
 
 		var modified = new Person("Alexander", 30, "john@example.com");
 
@@ -190,7 +190,7 @@ public class TrackerTests
 		// Arrange
 		var original = new Person("John", 30, "john@example.com");
 		var tracker = Tracker<Person, Difference>.CreateNew(original)
-			.Track(p => p.Age, (old, newVal) => new Difference("Age", old, newVal));
+			.TrackProperty(p => p.Age, (old, newVal) => new Difference("Age", old, newVal));
 
 		var modified1 = new Person("John", 31, "john@example.com");
 		var modified2 = new Person("John", 32, "john@example.com");

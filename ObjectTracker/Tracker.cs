@@ -14,7 +14,7 @@ namespace ObjectTracker
 		/// <param name="selector">Function to extract the value to track from the object.</param>
 		/// <param name="differenceFactory">Function to create a difference when old and new values don't match. Receives (oldValue, newValue).</param>
 		/// <returns>The tracker instance for method chaining.</returns>
-		Tracker<TType, TDiff> Track<TValue>(Func<TType, TValue> selector, Func<TValue?, TValue?, TDiff> differenceFactory);
+		Tracker<TType, TDiff> TrackProperty<TValue>(Func<TType, TValue> selector, Func<TValue?, TValue?, TDiff> differenceFactory);
 
 		/// <summary>
 		/// Configures tracking for a collection of items. Detects additions, removals, and changes to matched items.
@@ -26,7 +26,7 @@ namespace ObjectTracker
 		/// <param name="removedFactory">Optional. Function to create a difference for items in source but not in target. Receives (source, target, removedItem).</param>
 		/// <param name="configureTracker">Optional. Action to configure property tracking for matched items within the collection.</param>
 		/// <returns>The tracker instance for method chaining.</returns>
-		Tracker<TType, TDiff> TrackItems<TItem>(Func<TType, IEnumerable<TItem>> itemsSelector, Func<TItem, TItem, bool> matchingPredicate, Func<TType, TType, TItem, TDiff>? addedFactory = null, Func<TType, TType, TItem, TDiff>? removedFactory = null, Action<Tracker<TItem, TDiff>>? configureTracker = null);
+		Tracker<TType, TDiff> TrackCollection<TItem>(Func<TType, IEnumerable<TItem>> itemsSelector, Func<TItem, TItem, bool> matchingPredicate, Func<TType, TType, TItem, TDiff>? addedFactory = null, Func<TType, TType, TItem, TDiff>? removedFactory = null, Action<Tracker<TItem, TDiff>>? configureTracker = null);
 
 		/// <summary>
 		/// Compares the target object against the original snapshot and returns all detected differences.
@@ -82,7 +82,7 @@ namespace ObjectTracker
 		/// <param name="selector">Function to extract the value to track from the object.</param>
 		/// <param name="differenceFactory">Function to create a difference when old and new values don't match. Receives (oldValue, newValue).</param>
 		/// <returns>The tracker instance for method chaining.</returns>
-		public Tracker<TType, TDiff> Track<TValue>(
+		public Tracker<TType, TDiff> TrackProperty<TValue>(
 			Func<TType, TValue> selector,
 			Func<TValue?, TValue?, TDiff> differenceFactory)
 		{
@@ -102,7 +102,7 @@ namespace ObjectTracker
 		/// <param name="removedFactory">Optional. Function to create a difference for items in source but not in target. Receives (source, target, removedItem). If null, removals are not reported.</param>
 		/// <param name="configureTracker">Optional. Action to configure property tracking for matched items within the collection. Receives a tracker for each source item.</param>
 		/// <returns>The tracker instance for method chaining.</returns>
-		public Tracker<TType, TDiff> TrackItems<TItem>(
+		public Tracker<TType, TDiff> TrackCollection<TItem>(
 			Func<TType, IEnumerable<TItem>> itemsSelector,
 			Func<TItem, TItem, bool> matchingPredicate,
 			Func<TType, TType, TItem, TDiff>? addedFactory = null,

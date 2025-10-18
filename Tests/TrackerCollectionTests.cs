@@ -14,7 +14,7 @@ public class TrackerCollectionTests
 		var tracker = Tracker<ShoppingCart, Difference>.CreateNew(cart);
 
 		// Act
-		var result = tracker.TrackItems(
+		var result = tracker.TrackCollection(
 			c => c.Products,
 			(p1, p2) => p1.Id == p2.Id,
 			addedFactory: (src, tgt, item) => new Difference("Added", item),
@@ -36,7 +36,7 @@ public class TrackerCollectionTests
 		var cart = new ShoppingCart(products);
 
 		var tracker = Tracker<ShoppingCart, Difference>.CreateNew(cart)
-			.TrackItems(
+			.TrackCollection(
 				c => c.Products,
 				(p1, p2) => p1.Id == p2.Id,
 				addedFactory: (src, tgt, item) => new Difference("Added", item),
@@ -60,7 +60,7 @@ public class TrackerCollectionTests
 		var cart = new ShoppingCart(originalProducts);
 
 		var tracker = Tracker<ShoppingCart, Difference>.CreateNew(cart)
-			.TrackItems(
+			.TrackCollection(
 				c => c.Products,
 				(p1, p2) => p1.Id == p2.Id,
 				addedFactory: (src, tgt, item) => new Difference("Added", item),
@@ -96,7 +96,7 @@ public class TrackerCollectionTests
 		var cart = new ShoppingCart(originalProducts);
 
 		var tracker = Tracker<ShoppingCart, Difference>.CreateNew(cart)
-			.TrackItems(
+			.TrackCollection(
 				c => c.Products,
 				(p1, p2) => p1.Id == p2.Id,
 				addedFactory: (src, tgt, item) => new Difference("Added", item),
@@ -130,7 +130,7 @@ public class TrackerCollectionTests
 		var cart = new ShoppingCart(originalProducts);
 
 		var tracker = Tracker<ShoppingCart, Difference>.CreateNew(cart)
-			.TrackItems(
+			.TrackCollection(
 				c => c.Products,
 				(p1, p2) => p1.Id == p2.Id,
 				addedFactory: (src, tgt, item) => new Difference("Added", item),
@@ -164,7 +164,7 @@ public class TrackerCollectionTests
 		var cart = new ShoppingCart(originalProducts);
 
 		var tracker = Tracker<ShoppingCart, Difference>.CreateNew(cart)
-			.TrackItems(
+			.TrackCollection(
 				c => c.Products,
 				(p1, p2) => p1.Id == p2.Id,
 				addedFactory: (src, tgt, item) => new Difference("Added", item),
@@ -198,14 +198,14 @@ public class TrackerCollectionTests
 		var cart = new ShoppingCart(originalProducts);
 
 		var tracker = Tracker<ShoppingCart, Difference>.CreateNew(cart)
-			.TrackItems(
+			.TrackCollection(
 				c => c.Products,
 				(p1, p2) => p1.Id == p2.Id,
 				addedFactory: (src, tgt, item) => new Difference("Added", item),
 				removedFactory: (src, tgt, item) => new Difference("Removed", item),
 				configureTracker: itemTracker =>
 				{
-					itemTracker.Track(p => p.Price, (old, newVal) => new Difference($"PriceChanged", new { OldPrice = old, NewPrice = newVal }));
+					itemTracker.TrackProperty(p => p.Price, (old, newVal) => new Difference($"PriceChanged", new { OldPrice = old, NewPrice = newVal }));
 				});
 
 		var modifiedProducts = new List<Product>
@@ -235,13 +235,13 @@ public class TrackerCollectionTests
 		var cart = new ShoppingCart(originalProducts);
 
 		var tracker = Tracker<ShoppingCart, Difference>.CreateNew(cart)
-			.TrackItems(
+			.TrackCollection(
 				c => c.Products,
 				(p1, p2) => p1.Id == p2.Id,
 				configureTracker: itemTracker =>
 				{
-					itemTracker.Track(p => p.Price, (old, newVal) => new Difference($"PriceChanged-{itemTracker.Source.Id}", new { OldPrice = old, NewPrice = newVal }));
-					itemTracker.Track(p => p.Name, (old, newVal) => new Difference($"NameChanged-{itemTracker.Source.Id}", new { OldName = old, NewName = newVal }));
+					itemTracker.TrackProperty(p => p.Price, (old, newVal) => new Difference($"PriceChanged-{itemTracker.Source.Id}", new { OldPrice = old, NewPrice = newVal }));
+					itemTracker.TrackProperty(p => p.Name, (old, newVal) => new Difference($"NameChanged-{itemTracker.Source.Id}", new { OldName = old, NewName = newVal }));
 				});
 
 		var modifiedProducts = new List<Product>
@@ -272,7 +272,7 @@ public class TrackerCollectionTests
 		var cart = new ShoppingCart(originalProducts);
 
 		var tracker = Tracker<ShoppingCart, Difference>.CreateNew(cart)
-			.TrackItems(
+			.TrackCollection(
 				c => c.Products,
 				(p1, p2) => p1.Id == p2.Id,
 				removedFactory: (src, tgt, item) => new Difference("Removed", item));
@@ -303,7 +303,7 @@ public class TrackerCollectionTests
 		var cart = new ShoppingCart(originalProducts);
 
 		var tracker = Tracker<ShoppingCart, Difference>.CreateNew(cart)
-			.TrackItems(
+			.TrackCollection(
 				c => c.Products,
 				(p1, p2) => p1.Id == p2.Id,
 				addedFactory: (src, tgt, item) => new Difference("Added", item));
@@ -328,7 +328,7 @@ public class TrackerCollectionTests
 		var cart = new ShoppingCart(new List<Product>());
 
 		var tracker = Tracker<ShoppingCart, Difference>.CreateNew(cart)
-			.TrackItems(
+			.TrackCollection(
 				c => c.Products,
 				(p1, p2) => p1.Id == p2.Id,
 				addedFactory: (src, tgt, item) => new Difference("Added", item),
@@ -361,7 +361,7 @@ public class TrackerCollectionTests
 		var cart = new ShoppingCart(originalProducts);
 
 		var tracker = Tracker<ShoppingCart, Difference>.CreateNew(cart)
-			.TrackItems(
+			.TrackCollection(
 				c => c.Products,
 				(p1, p2) => p1.Id == p2.Id,
 				addedFactory: (src, tgt, item) => new Difference("Added", item),
@@ -390,14 +390,14 @@ public class TrackerCollectionTests
 		var cart = new ShoppingCart(originalProducts);
 
 		var tracker = Tracker<ShoppingCart, Difference>.CreateNew(cart)
-			.TrackItems(
+			.TrackCollection(
 				c => c.Products,
 				(p1, p2) => p1.Id == p2.Id,
 				addedFactory: (src, tgt, item) => new Difference("Added", item),
 				removedFactory: (src, tgt, item) => new Difference("Removed", item),
 				configureTracker: itemTracker =>
 				{
-					itemTracker.Track(p => p.Price, (old, newVal) => new Difference("PriceChanged", new { Id = itemTracker.Source.Id, OldPrice = old, NewPrice = newVal }));
+					itemTracker.TrackProperty(p => p.Price, (old, newVal) => new Difference("PriceChanged", new { Id = itemTracker.Source.Id, OldPrice = old, NewPrice = newVal }));
 				});
 
 		var modifiedProducts = new List<Product>
@@ -430,8 +430,8 @@ public class TrackerCollectionTests
 		var cart = new ShoppingCart(originalProducts);
 
 		var tracker = Tracker<ShoppingCart, Difference>.CreateNew(cart)
-			.Track(c => c.Products.Count, (old, newVal) => new Difference("CountChanged", new { OldCount = old, NewCount = newVal }))
-			.TrackItems(
+			.TrackProperty(c => c.Products.Count, (old, newVal) => new Difference("CountChanged", new { OldCount = old, NewCount = newVal }))
+			.TrackCollection(
 				c => c.Products,
 				(p1, p2) => p1.Id == p2.Id,
 				addedFactory: (src, tgt, item) => new Difference("Added", item));
