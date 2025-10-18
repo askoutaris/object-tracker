@@ -2,18 +2,13 @@
 {
 	public partial class Tracker<TType, TDiff>
 	{
-		interface ITrackedValue
+		class TrackedProperty<TValue> : ITrackedItem
 		{
-			TDiff[] Compare(TType target);
-		}
-
-		class TrackedValue<TValue> : ITrackedValue
-		{
-			private TValue? _sourceValue;
+			private readonly TValue? _sourceValue;
 			public Func<TType, TValue?> Selector { get; }
 			public Func<TValue?, TValue?, TDiff> DifferenceFactory { get; }
 
-			public TrackedValue(TType source, Func<TType, TValue?> selector, Func<TValue?, TValue?, TDiff> differenceFactory)
+			public TrackedProperty(TType source, Func<TType, TValue?> selector, Func<TValue?, TValue?, TDiff> differenceFactory)
 			{
 				_sourceValue = selector(source);
 				Selector = selector;

@@ -2,7 +2,7 @@ namespace ObjectTracker
 {
 	public partial class Tracker<TType, TDiff> : ITracker<TType, TDiff>
 	{
-		class TrackCollection<TItem> : ITrackedValue
+		class TrackedCollection<TItem> : ITrackedItem
 		{
 			private readonly TType _source;
 
@@ -12,7 +12,7 @@ namespace ObjectTracker
 			private readonly Func<TType, TType, TItem, TDiff>? _removedFactory;
 			private readonly List<Tracker<TItem, TDiff>> _itemTrackers;
 
-			public TrackCollection(
+			public TrackedCollection(
 				TType source,
 				Func<TType, IEnumerable<TItem>> itemsSelector,
 				Func<TItem, TItem, bool> matchingPredicate,
