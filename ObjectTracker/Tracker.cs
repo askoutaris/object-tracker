@@ -43,9 +43,7 @@
 
 		public TDiff[] Compare(TType target)
 		{
-			return _trackedValues
-				.SelectMany(value => value.Compare(target))
-				.ToArray();
+			return [.. _trackedValues.SelectMany(value => value.Compare(target))];
 		}
 	}
 }

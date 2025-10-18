@@ -1,4 +1,4 @@
-﻿namespace ObjectTracker
+namespace ObjectTracker
 {
 	public partial class Tracker<TType, TDiff> : ITracker<TType, TDiff>
 	{
@@ -40,26 +40,46 @@
 
 			public TDiff[] Compare(TType target)
 			{
-				var targetItems = _itemsSelector(target);
+				// Materialize target items once to avoid multiple enumerations
+				var targetItemsList = _itemsSelector(target).ToArray();
+				var matchedTargetIndices = new HashSet<int>();
 
 				var differences = new List<TDiff>();
+
+				// First pass: Match source trackers with target items
 				foreach (var tracker in _itemTrackers)
 				{
-					TItem? matchedItem = targetItems.SingleOrDefault(targetItem => _matchingPredicate(tracker.Source, targetItem));
+					TItem? matchedItem = default;
+					int matchedIndex = -1;
+
+					// Find matching target item
+					for (int i = 0; i < targetItemsList.Length; i++)
+					{
+						if (_matchingPredicate(tracker.Source, targetItemsList[i]))
+						{
+							matchedItem = targetItemsList[i];
+							matchedIndex = i;
+							break;
+						}
+					}
 
 					if (matchedItem != null)
+					{
+						// Track matched target items to avoid duplicate processing
+						matchedTargetIndices.Add(matchedIndex);
 						differences.AddRange(tracker.Compare(matchedItem));
-					else if (matchedItem == null && _removedFactory != null)
+					}
+					else if (_removedFactory != null)
+					{
 						differences.Add(_removedFactory(_source, target, tracker.Source));
+					}
 				}
 
-				foreach (var targetItem in targetItems)
-				{
-					var tracker = _itemTrackers.SingleOrDefault(tracker => _matchingPredicate(targetItem, tracker.Source));
-
-					if (tracker == null && _addedFactory != null)
-						differences.Add(_addedFactory(_source, target, targetItem));
-				}
+				// Second pass: Find target items that weren't matched (additions)
+				if (_addedFactory != null)
+					for (int i = 0; i < targetItemsList.Length; i++)
+						if (!matchedTargetIndices.Contains(i))
+							differences.Add(_addedFactory(_source, target, targetItemsList[i]));
 
 				return [.. differences];
 			}
