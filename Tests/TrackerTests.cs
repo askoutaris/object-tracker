@@ -1,3 +1,5 @@
+using ObjectTracker.Builders;
+
 namespace ObjectTracker.Tests;
 
 public class TrackerTests
@@ -6,159 +8,161 @@ public class TrackerTests
 	private record Difference(string PropertyName, object? OldValue, object? NewValue);
 
 	[Fact]
-	public void CreateNew_ShouldCreateTracker()
+	public void Track_ShouldReturnTrackedObject()
 	{
 		// Arrange
+		var tracker = new TrackerBuilder<Person, Difference>()
+			.TrackProperty(p => p.Name, (p, old, newVal) => new Difference("Name", old, newVal))
+			.Build();
 		var person = new Person("John", 30, "john@example.com");
 
 		// Act
-		var tracker = Tracker<Person, Difference>.CreateNew(person);
+		var trackedObject = tracker.Track(person);
 
 		// Assert
-		Assert.NotNull(tracker);
+		Assert.NotNull(trackedObject);
+		Assert.Equal(person, trackedObject.Source);
 	}
 
 	[Fact]
-	public void Track_ShouldReturnTrackerForFluentAPI()
+	public void Track_CanTrackMultipleObjectsWithSameTracker()
 	{
 		// Arrange
-		var person = new Person("John", 30, null);
-		var tracker = Tracker<Person, Difference>.CreateNew(person);
+		var tracker = new TrackerBuilder<Person, Difference>()
+			.TrackProperty(p => p.Name, (p, old, newVal) => new Difference("Name", old, newVal))
+			.Build();
+		var person1 = new Person("John", 30, "john@example.com");
+		var person2 = new Person("Jane", 25, "jane@example.com");
 
 		// Act
-		var result = tracker.TrackProperty(p => p.Name, (old, newVal) => new Difference("Name", old, newVal));
+		var tracked1 = tracker.Track(person1);
+		var tracked2 = tracker.Track(person2);
 
 		// Assert
-		Assert.Same(tracker, result);
+		Assert.NotSame(tracked1, tracked2);
+		Assert.Equal(person1, tracked1.Source);
+		Assert.Equal(person2, tracked2.Source);
 	}
 
 	[Fact]
-	public void Compare_WhenNoChanges_ShouldReturnEmptyArray()
+	public void GetDifferences_WhenNoChanges_ShouldReturnEmpty()
 	{
 		// Arrange
 		var person = new Person("John", 30, "john@example.com");
-		var tracker = Tracker<Person, Difference>.CreateNew(person)
-			.TrackProperty(p => p.Name, (old, newVal) => new Difference("Name", old, newVal))
-			.TrackProperty(p => p.Age, (old, newVal) => new Difference("Age", old, newVal))
-			.TrackProperty(p => p.Email, (old, newVal) => new Difference("Email", old, newVal));
+		var tracker = new TrackerBuilder<Person, Difference>()
+			.TrackProperty(p => p.Name, (p, old, newVal) => new Difference("Name", old, newVal))
+			.TrackProperty(p => p.Age, (p, old, newVal) => new Difference("Age", old, newVal))
+			.Build();
+		var trackedPerson = tracker.Track(person);
 
 		// Act
-		var differences = tracker.Compare(person);
+		var differences = trackedPerson.GetDifferences();
 
 		// Assert
 		Assert.Empty(differences);
 	}
 
 	[Fact]
-	public void Compare_WhenSinglePropertyChanged_ShouldReturnOneDifference()
+	public void GetDifferences_WhenPropertyChanged_ShouldReturnDifference()
 	{
 		// Arrange
-		var original = new Person("John", 30, "john@example.com");
-		var tracker = Tracker<Person, Difference>.CreateNew(original)
-			.TrackProperty(p => p.Name, (old, newVal) => new Difference("Name", old, newVal))
-			.TrackProperty(p => p.Age, (old, newVal) => new Difference("Age", old, newVal));
+		var person = new Person("John", 30, "john@example.com");
+		var tracker = new TrackerBuilder<Person, Difference>()
+			.TrackProperty(p => p.Name, (p, old, newVal) => new Difference("Name", old, newVal))
+			.TrackProperty(p => p.Age, (p, old, newVal) => new Difference("Age", old, newVal))
+			.Build();
+		var trackedPerson = tracker.Track(person);
 
-		var modified = new Person("John", 31, "john@example.com");
-
-		// Act
-		var differences = tracker.Compare(modified);
+		// Act - modify the person (in real scenarios, person would be mutable)
+		var modifiedPerson = person with { Age = 31 };
+		var differences = trackedPerson.Compare(modifiedPerson);
 
 		// Assert
 		Assert.Single(differences);
-		Assert.Equal("Age", differences[0].PropertyName);
-		Assert.Equal(30, differences[0].OldValue);
-		Assert.Equal(31, differences[0].NewValue);
+		var diff = differences.First();
+		Assert.Equal("Age", diff.PropertyName);
+		Assert.Equal(30, diff.OldValue);
+		Assert.Equal(31, diff.NewValue);
 	}
 
 	[Fact]
 	public void Compare_WhenMultiplePropertiesChanged_ShouldReturnMultipleDifferences()
 	{
 		// Arrange
-		var original = new Person("John", 30, "john@example.com");
-		var tracker = Tracker<Person, Difference>.CreateNew(original)
-			.TrackProperty(p => p.Name, (old, newVal) => new Difference("Name", old, newVal))
-			.TrackProperty(p => p.Age, (old, newVal) => new Difference("Age", old, newVal))
-			.TrackProperty(p => p.Email, (old, newVal) => new Difference("Email", old, newVal));
-
-		var modified = new Person("Jane", 31, "john@example.com");
+		var person = new Person("John", 30, "john@example.com");
+		var tracker = new TrackerBuilder<Person, Difference>()
+			.TrackProperty(p => p.Name, (p, old, newVal) => new Difference("Name", old, newVal))
+			.TrackProperty(p => p.Age, (p, old, newVal) => new Difference("Age", old, newVal))
+			.TrackProperty(p => p.Email, (p, old, newVal) => new Difference("Email", old, newVal))
+			.Build();
+		var trackedPerson = tracker.Track(person);
 
 		// Act
-		var differences = tracker.Compare(modified);
+		var modifiedPerson = new Person("Jane", 31, "jane@example.com");
+		var differences = trackedPerson.Compare(modifiedPerson);
 
 		// Assert
-		Assert.Equal(2, differences.Length);
+		Assert.Equal(3, differences.Count);
 		Assert.Contains(differences, d => d.PropertyName == "Name" && (string)d.OldValue! == "John" && (string)d.NewValue! == "Jane");
 		Assert.Contains(differences, d => d.PropertyName == "Age" && (int)d.OldValue! == 30 && (int)d.NewValue! == 31);
+		Assert.Contains(differences, d => d.PropertyName == "Email");
 	}
 
 	[Fact]
 	public void Compare_WhenValueChangedFromNullToValue_ShouldReturnDifference()
 	{
 		// Arrange
-		var original = new Person("John", 30, null);
-		var tracker = Tracker<Person, Difference>.CreateNew(original)
-			.TrackProperty(p => p.Email, (old, newVal) => new Difference("Email", old, newVal));
-
-		var modified = new Person("John", 30, "john@example.com");
+		var person = new Person("John", 30, null);
+		var tracker = new TrackerBuilder<Person, Difference>()
+			.TrackProperty(p => p.Email, (p, old, newVal) => new Difference("Email", old, newVal))
+			.Build();
+		var trackedPerson = tracker.Track(person);
 
 		// Act
-		var differences = tracker.Compare(modified);
+		var modifiedPerson = person with { Email = "john@example.com" };
+		var differences = trackedPerson.Compare(modifiedPerson);
 
 		// Assert
 		Assert.Single(differences);
-		Assert.Equal("Email", differences[0].PropertyName);
-		Assert.Null(differences[0].OldValue);
-		Assert.Equal("john@example.com", differences[0].NewValue);
+		Assert.Equal("Email", differences.First().PropertyName);
+		Assert.Null(differences.First().OldValue);
+		Assert.Equal("john@example.com", differences.First().NewValue);
 	}
 
 	[Fact]
 	public void Compare_WhenValueChangedFromValueToNull_ShouldReturnDifference()
 	{
 		// Arrange
-		var original = new Person("John", 30, "john@example.com");
-		var tracker = Tracker<Person, Difference>.CreateNew(original)
-			.TrackProperty(p => p.Email, (old, newVal) => new Difference("Email", old, newVal));
-
-		var modified = new Person("John", 30, null);
+		var person = new Person("John", 30, "john@example.com");
+		var tracker = new TrackerBuilder<Person, Difference>()
+			.TrackProperty(p => p.Email, (p, old, newVal) => new Difference("Email", old, newVal))
+			.Build();
+		var trackedPerson = tracker.Track(person);
 
 		// Act
-		var differences = tracker.Compare(modified);
+		var modifiedPerson = person with { Email = null };
+		var differences = trackedPerson.Compare(modifiedPerson);
 
 		// Assert
 		Assert.Single(differences);
-		Assert.Equal("Email", differences[0].PropertyName);
-		Assert.Equal("john@example.com", differences[0].OldValue);
-		Assert.Null(differences[0].NewValue);
+		Assert.Equal("Email", differences.First().PropertyName);
+		Assert.Equal("john@example.com", differences.First().OldValue);
+		Assert.Null(differences.First().NewValue);
 	}
 
 	[Fact]
 	public void Compare_WhenBothValuesAreNull_ShouldReturnNoDifferences()
 	{
 		// Arrange
-		var original = new Person("John", 30, null);
-		var tracker = Tracker<Person, Difference>.CreateNew(original)
-			.TrackProperty(p => p.Email, (old, newVal) => new Difference("Email", old, newVal));
-
-		var modified = new Person("John", 30, null);
-
-		// Act
-		var differences = tracker.Compare(modified);
-
-		// Assert
-		Assert.Empty(differences);
-	}
-
-	[Fact]
-	public void Compare_WhenNoPropertiesTracked_ShouldReturnEmptyArray()
-	{
-		// Arrange
-		var original = new Person("John", 30, "john@example.com");
-		var tracker = Tracker<Person, Difference>.CreateNew(original);
-
-		var modified = new Person("Jane", 31, "jane@example.com");
+		var person = new Person("John", 30, null);
+		var tracker = new TrackerBuilder<Person, Difference>()
+			.TrackProperty(p => p.Email, (p, old, newVal) => new Difference("Email", old, newVal))
+			.Build();
+		var trackedPerson = tracker.Track(person);
 
 		// Act
-		var differences = tracker.Compare(modified);
+		var modifiedPerson = person with { Email = null };
+		var differences = trackedPerson.Compare(modifiedPerson);
 
 		// Assert
 		Assert.Empty(differences);
@@ -168,44 +172,104 @@ public class TrackerTests
 	public void Compare_WithComplexSelector_ShouldTrackCorrectly()
 	{
 		// Arrange
-		var original = new Person("John", 30, "john@example.com");
-		var tracker = Tracker<Person, Difference>.CreateNew(original)
-			.TrackProperty(p => p.Name.Length, (old, newVal) => new Difference("NameLength", old, newVal));
-
-		var modified = new Person("Alexander", 30, "john@example.com");
+		var person = new Person("John", 30, "john@example.com");
+		var tracker = new TrackerBuilder<Person, Difference>()
+			.TrackProperty(p => p.Name.Length, (p, old, newVal) => new Difference("NameLength", old, newVal))
+			.Build();
+		var trackedPerson = tracker.Track(person);
 
 		// Act
-		var differences = tracker.Compare(modified);
+		var modifiedPerson = person with { Name = "Alexander" };
+		var differences = trackedPerson.Compare(modifiedPerson);
 
 		// Assert
 		Assert.Single(differences);
-		Assert.Equal("NameLength", differences[0].PropertyName);
-		Assert.Equal(4, differences[0].OldValue);
-		Assert.Equal(9, differences[0].NewValue);
+		Assert.Equal("NameLength", differences.First().PropertyName);
+		Assert.Equal(4, differences.First().OldValue);
+		Assert.Equal(9, differences.First().NewValue);
 	}
 
 	[Fact]
 	public void Compare_CalledMultipleTimes_ShouldAlwaysCompareAgainstOriginalSource()
 	{
 		// Arrange
-		var original = new Person("John", 30, "john@example.com");
-		var tracker = Tracker<Person, Difference>.CreateNew(original)
-			.TrackProperty(p => p.Age, (old, newVal) => new Difference("Age", old, newVal));
-
-		var modified1 = new Person("John", 31, "john@example.com");
-		var modified2 = new Person("John", 32, "john@example.com");
+		var person = new Person("John", 30, "john@example.com");
+		var tracker = new TrackerBuilder<Person, Difference>()
+			.TrackProperty(p => p.Age, (p, old, newVal) => new Difference("Age", old, newVal))
+			.Build();
+		var trackedPerson = tracker.Track(person);
 
 		// Act
-		var differences1 = tracker.Compare(modified1);
-		var differences2 = tracker.Compare(modified2);
+		var modified1 = person with { Age = 31 };
+		var modified2 = person with { Age = 32 };
+
+		var differences1 = trackedPerson.Compare(modified1);
+		var differences2 = trackedPerson.Compare(modified2);
 
 		// Assert
 		Assert.Single(differences1);
-		Assert.Equal(30, differences1[0].OldValue);
-		Assert.Equal(31, differences1[0].NewValue);
+		Assert.Equal(30, differences1.First().OldValue);
+		Assert.Equal(31, differences1.First().NewValue);
 
 		Assert.Single(differences2);
-		Assert.Equal(30, differences2[0].OldValue); // Still comparing against original
-		Assert.Equal(32, differences2[0].NewValue);
+		Assert.Equal(30, differences2.First().OldValue); // Still comparing against original
+		Assert.Equal(32, differences2.First().NewValue);
+	}
+
+	[Fact]
+	public void DifferenceFactory_ReceivesTargetObjectForContext()
+	{
+		// Arrange
+		Person? capturedPerson = null;
+		var person = new Person("John", 30, "john@example.com");
+		var tracker = new TrackerBuilder<Person, Difference>()
+			.TrackProperty(
+				p => p.Age,
+				(p, old, newVal) =>
+				{
+					capturedPerson = p;
+					return new Difference("Age", old, newVal);
+				})
+			.Build();
+		var trackedPerson = tracker.Track(person);
+
+		// Act
+		var modified = person with { Age = 31 };
+		trackedPerson.Compare(modified);
+
+		// Assert
+		Assert.NotNull(capturedPerson);
+		Assert.Equal(modified, capturedPerson);
+	}
+
+	[Fact]
+	public void TrackerReuse_ShouldProduceIndependentTrackedObjects()
+	{
+		// Arrange
+		var tracker = new TrackerBuilder<Person, Difference>()
+			.TrackProperty(p => p.Age, (p, old, newVal) => new Difference("Age", old, newVal))
+			.Build();
+
+		var person1 = new Person("John", 30, "john@example.com");
+		var person2 = new Person("Jane", 25, "jane@example.com");
+
+		// Act
+		var tracked1 = tracker.Track(person1);
+		var tracked2 = tracker.Track(person2);
+
+		var modified1 = person1 with { Age = 31 };
+		var modified2 = person2 with { Age = 26 };
+
+		var diff1 = tracked1.Compare(modified1);
+		var diff2 = tracked2.Compare(modified2);
+
+		// Assert
+		Assert.Single(diff1);
+		Assert.Equal(30, diff1.First().OldValue);
+		Assert.Equal(31, diff1.First().NewValue);
+
+		Assert.Single(diff2);
+		Assert.Equal(25, diff2.First().OldValue);
+		Assert.Equal(26, diff2.First().NewValue);
 	}
 }

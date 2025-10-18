@@ -4,11 +4,11 @@ namespace Workbench
 	{
 	}
 
-	public class GenericDifference : IDifference
+	public class GenericChange : IDifference
 	{
 		public string Message { get; }
 
-		public GenericDifference(string message)
+		public GenericChange(string message)
 		{
 			Message = message;
 		}

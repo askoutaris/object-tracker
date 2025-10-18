@@ -1,4 +1,4 @@
-using ObjectTracker;
+using ObjectTracker.Builders;
 
 namespace Workbench
 {
@@ -6,121 +6,51 @@ namespace Workbench
 	{
 		static void Main(string[] _)
 		{
-			Console.WriteLine("=== ObjectTracker Demo ===\n");
+			var trackerBuilder = new TrackerBuilder<Person, IDifference>()
+				.TrackProperty(
+					selector: person => person.Name,
+					differenceFactory: (person, oldValue, newValue) => new GenericChange($"Name changed from {oldValue} to {newValue} for person {person.Id}"))
+				.TrackProperty(
+					selector: person => person.Age,
+					differenceFactory: (person, oldValue, newValue) => new GenericChange($"Age changed from {oldValue} to {newValue} for person {person.Id}"))
+				.TrackCollection(
+					itemsSelector: x => x.Addresses,
+					matchingPredicate: (sourceAddress, targetAddress) => sourceAddress.Id == targetAddress.Id,
+					addedFactory: (sourcePerson, targetPerson, addedAddress) => new GenericChange($"Address added {addedAddress.City}"),
+					removedFactory: (sourcePerson, targetPerson, removedAddress) => new GenericChange($"Address removed {removedAddress.City}"),
+					configureItemTracker: itemTracker => itemTracker
+						.TrackProperty(
+							selector: address => address.City,
+							differenceFactory: (address, oldValue, newValue) => new GenericChange($"Name changed from {oldValue} to {newValue} for address {address.Id}"))
+				);
 
-			// Create a person object that we'll track
+			var tracker = trackerBuilder.Build();
+
 			var person = new Person
 			{
+				Id = 1,
+				Age = 35,
 				Name = "John",
-				Addresses =
-				[
-					new Address { Id = 1, City = "New York" },
-					new Address { Id = 3, City = "Boston" },
-					new Address { Id = 4, City = "Chicago" },
+				Addresses = [
+					new Address { Id =1 , City = "New York" },
+					new Address { Id =2 , City = "London" },
+					new Address { Id =3 , City = "Paris" },
 				]
 			};
 
-			Console.WriteLine("Initial state:");
-			Console.WriteLine($"  Name: {person.Name}");
-			foreach (var addr in person.Addresses)
-				Console.WriteLine($"    Address {addr.Id}: {addr.City}");
+			var trackedPerson = tracker.Track(person);
 
-			Console.WriteLine("\n--- Creating tracker (takes snapshot of current state) ---\n");
+			person.Name = "David";
+			person.Age = 36;
+			person.Addresses[0].City = "Madrid";
+			person.Addresses.Add(new Address { Id = 4, City = "Liverpool" });
+			person.Addresses.RemoveAll(x => x.Id == 3);
 
-			// Create tracker - this captures the current state as the baseline
-			var tracker = Tracker<Person, IDifference>.CreateNew(person)
-				// TrackProperty the Name property
-				.TrackProperty(
-					selector: p => p.Name,
-					differenceFactory: (oldName, newName) =>
-						new PropertyChangeDifference("Name", oldName, newName))
+			var differences = trackedPerson.GetDifferences();
 
-				// TrackProperty Name length with custom difference type
-				.TrackProperty(
-					selector: p => p.Name,
-					differenceFactory: (oldName, newName) =>
-					{
-						if (oldName != null && newName != null && newName.Length > oldName.Length)
-							return new LongerNameDifference(oldName, newName);
-						return null!; // Return null to skip this difference if condition not met
-					})
+			foreach (var change in differences)
+				Console.WriteLine(change.ToString());
 
-				// TrackProperty collection of addresses
-				.TrackCollection(
-					itemsSelector: p => p.Addresses,
-					matchingPredicate: (addr1, addr2) => addr1.Id == addr2.Id,
-					addedFactory: (src, tgt, addedAddress) =>
-						new GenericDifference($"Address added - Id: {addedAddress.Id}, City: {addedAddress.City}"),
-					removedFactory: (src, tgt, removedAddress) =>
-						new GenericDifference($"Address removed - Id: {removedAddress.Id}, City: {removedAddress.City}"),
-					configureTracker: addressTracker =>
-					{
-						// For each matched address, track the City property
-						addressTracker.TrackProperty(
-							selector: a => a.City,
-							differenceFactory: (oldCity, newCity) =>
-								new GenericDifference($"Address {addressTracker.Source.Id}: City changed from \"{oldCity}\" to \"{newCity}\""));
-					});
-
-			Console.WriteLine("--- Making changes to the person ---\n");
-
-			// Now modify the same object
-			person.Name = "John Doe";
-			person.Addresses =
-			[
-				new Address { Id = 2, City = "Seattle" },     // Added (new ID)
-				new Address { Id = 3, City = "Cambridge" },   // Modified (city changed)
-				new Address { Id = 4, City = "Chicago" },     // Unchanged
-				// Address with Id 1 was removed
-			];
-
-			Console.WriteLine("Modified state:");
-			Console.WriteLine($"  Name: {person.Name}");
-			foreach (var addr in person.Addresses)
-				Console.WriteLine($"    Address {addr.Id}: {addr.City}");
-
-			Console.WriteLine("\n--- Comparing against tracked snapshot ---\n");
-
-			// Compare the current state against the original snapshot
-			IDifference[] differences = tracker.Compare(person);
-
-			Console.WriteLine($"Found {differences.Length} difference(s):\n");
-
-			foreach (var diff in differences.Where(d => d != null))
-			{
-				Console.WriteLine($"  • {diff}");
-			}
-
-			Console.WriteLine("\n--- Making more changes ---\n");
-
-			// Change the person again
-			person.Name = "Jane";
-			person.Addresses =
-			[
-				new Address { Id = 1, City = "Los Angeles" },
-				new Address { Id = 3, City = "Boston" },
-				new Address { Id = 4, City = "Chicago" },
-			];
-
-			Console.WriteLine("New state:");
-			Console.WriteLine($"  Name: {person.Name}");
-			foreach (var addr in person.Addresses)
-				Console.WriteLine($"    Address {addr.Id}: {addr.City}");
-
-			Console.WriteLine("\n--- Comparing again (still against original snapshot) ---\n");
-
-			// The tracker always compares against the original snapshot from when it was created
-			var moreDifferences = tracker.Compare(person);
-
-			Console.WriteLine($"Found {moreDifferences.Length} difference(s):\n");
-
-			foreach (var diff in moreDifferences.Where(d => d != null))
-			{
-				Console.WriteLine($"  • {diff}");
-			}
-
-			Console.WriteLine("\n--- Demo Complete ---");
-			Console.WriteLine("\nPress Enter to exit...");
 			Console.ReadLine();
 		}
 	}
