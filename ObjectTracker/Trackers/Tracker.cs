@@ -6,7 +6,7 @@ namespace ObjectTracker.Trackers
 {
 	/// <summary>
 	/// Reusable tracker that captures object state snapshots.
-	/// Configured once via <see cref="TrackerBuilder{TType, TDiff}"/>, then used to track multiple objects efficiently.
+	/// Configured once via <see cref="ObjectTracker.Builders.TrackerBuilder{TType, TDiff}"/>, then used to track multiple objects efficiently.
 	/// </summary>
 	/// <typeparam name="TType">Type of object to track.</typeparam>
 	/// <typeparam name="TDiff">Type representing a difference between values.</typeparam>

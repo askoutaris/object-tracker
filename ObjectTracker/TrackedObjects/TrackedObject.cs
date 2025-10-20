@@ -4,7 +4,7 @@ namespace ObjectTracker.TrackedObjects
 {
 	/// <summary>
 	/// Immutable snapshot of an object's tracked state with comparison methods.
-	/// Created by <see cref="Tracker{TType, TDiff}.Track"/> to capture state at a point in time.
+	/// Created by <see cref="ObjectTracker.Trackers.Tracker{TType, TDiff}.Track"/> to capture state at a point in time.
 	/// </summary>
 	/// <typeparam name="TType">Type of object being tracked.</typeparam>
 	/// <typeparam name="TDiff">Type representing a difference between values.</typeparam>
